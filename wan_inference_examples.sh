@@ -137,7 +137,7 @@ ULTRA_HD_OPTS="--video_size 720 1280 --infer_steps 60 --video_length 121 --guida
 
 # Stable LoRA multipliers for consistent character generation
 LORA_MULTIPLIER_LOW="0.75"      # Reduced for better character consistency
-LORA_MULTIPLIER_HIGH="0.65"     # Lower for high noise to prevent artifacts
+LORA_MULTIPLIER_HIGH="0.45"     # Lower for high noise to prevent artifacts
 
 # =============================================================================
 # H100 OPTIMIZED BASIC EXAMPLES
