@@ -233,3 +233,43 @@ echo "💡 Monitor GPU temperature - H100 performs best under 80°C"
 echo "💡 Use both LoRA weights for best character consistency"
 echo "💡 Experiment with different resolutions and inference steps"
 echo "💡 Run 'bash wan_inference_examples.sh' for more examples"
+
+# H100 SXM Optimized Settings with fallback for torch.compile issues
+H100_OPTS_STABLE="--fp8 --fp8_scaled --fp8_fast --fp8_t5"
+H100_OPTS_FULL="--fp8 --fp8_scaled --fp8_fast --fp8_t5 --compile"
+
+# Function to test if torch.compile works with the current setup
+test_torch_compile() {
+    echo "🧪 Testing torch.compile compatibility..."
+
+    # Test with a simple command first (dry run)
+    python -c "
+import torch
+import warnings
+warnings.filterwarnings('ignore')
+try:
+    # Simple test to see if compile works without major issues
+    x = torch.randn(10, 10, device='cuda', dtype=torch.float16)
+    compiled_fn = torch.compile(torch.nn.Linear(10, 10).cuda().half())
+    _ = compiled_fn(x)
+    print('✅ torch.compile test passed')
+    exit(0)
+except Exception as e:
+    print(f'⚠️  torch.compile test failed: {e}')
+    exit(1)
+" 2>/dev/null
+
+    return $?
+}
+
+# Determine which optimization level to use
+if test_torch_compile; then
+    echo "✅ torch.compile is compatible - using full H100 optimizations"
+    H100_OPTS="$H100_OPTS_FULL"
+else
+    echo "⚠️  torch.compile compatibility issues detected - using stable H100 optimizations"
+    H100_OPTS="$H100_OPTS_STABLE"
+fi
+
+echo "Active H100 Options: $H100_OPTS"
+

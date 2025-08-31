@@ -92,8 +92,42 @@ echo "✅ All essential files verified"
 INFERENCE_OUTPUT_DIR="./h100_character_videos"
 mkdir -p "$INFERENCE_OUTPUT_DIR"
 
-# H100 SXM Optimized Settings
-H100_OPTS="--fp8 --fp8_scaled --fp8_fast --fp8_t5 --compile"
+# H100 SXM Optimized Settings with fallback for torch.compile issues
+H100_OPTS_STABLE="--fp8 --fp8_scaled --fp8_fast --fp8_t5"
+H100_OPTS_FULL="--fp8 --fp8_scaled --fp8_fast --fp8_t5 --compile"
+
+# Function to test if torch.compile works with the current setup
+test_torch_compile() {
+    echo "🧪 Testing torch.compile compatibility..."
+
+    # Test with a simple command first (dry run)
+    python -c "
+import torch
+import warnings
+warnings.filterwarnings('ignore')
+try:
+    # Simple test to see if compile works without major issues
+    x = torch.randn(10, 10, device='cuda', dtype=torch.float16)
+    compiled_fn = torch.compile(torch.nn.Linear(10, 10).cuda().half())
+    _ = compiled_fn(x)
+    print('✅ torch.compile test passed')
+    exit(0)
+except Exception as e:
+    print(f'⚠️  torch.compile test failed: {e}')
+    exit(1)
+" 2>/dev/null
+
+    return $?
+}
+
+# Determine which optimization level to use
+if test_torch_compile; then
+    echo "✅ torch.compile is compatible - using full H100 optimizations"
+    H100_OPTS="$H100_OPTS_FULL"
+else
+    echo "⚠️  torch.compile compatibility issues detected - using stable H100 optimizations"
+    H100_OPTS="$H100_OPTS_STABLE"
+fi
 
 # For maximum quality on H100 (leveraging 80GB VRAM)
 HIGH_QUALITY_OPTS="--video_size 1024 576 --infer_steps 50 --guidance_scale 7.5 --guidance_scale_high_noise 6.5"
