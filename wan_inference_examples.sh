@@ -154,7 +154,7 @@ python wan_generate_video.py \
     --t5 "$T5_MODEL" \
     --lora_weight "$LATEST_LOW" \
     --lora_multiplier "$LORA_MULTIPLIER_LOW" \
-    --prompt "A video of CHARACTER_VANRAJ_V1 walking in a beautiful garden during sunset" \
+    --prompt "A video of Vanraj a man walking in a beautiful garden during sunset" \
     --video_size 768 512 \
     $H100_OPTS \
     --save_path "$INFERENCE_OUTPUT_DIR/h100_basic" \
@@ -175,7 +175,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "A cinematic video of CHARACTER_VANRAJ_V1 standing confidently in an ornate palace hall" \
+        --prompt "A cinematic video of Vanraj a man standing confidently in an ornate palace hall" \
         $HIGH_QUALITY_OPTS \
         $H100_OPTS \
         --video_length 81 \
@@ -200,7 +200,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "CHARACTER_VANRAJ_V1 in 4K cinematic quality performing an elaborate royal ceremony" \
+        --prompt "Vanraj a man in 4K cinematic quality performing an elaborate royal ceremony" \
         $ULTRA_HD_OPTS \
         $H100_OPTS \
         --guidance_scale 7.0 \
@@ -228,7 +228,7 @@ python wan_generate_video.py \
     --t5 "$T5_MODEL" \
     --lora_weight "$LATEST_LOW" \
     --lora_multiplier "$LORA_MULTIPLIER_LOW" \
-    --prompt "A dynamic video of CHARACTER_VANRAJ_V1 practicing martial arts in a serene mountain temple" \
+    --prompt "A dynamic video of Vanraj a man practicing martial arts in a serene mountain temple" \
     --negative_prompt "blurry, low quality, distorted face, extra limbs" \
     --video_size 768 512 \
     --fps 30 \
@@ -253,7 +253,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "A portrait video of CHARACTER_VANRAJ_V1 with gentle wind moving his hair, warm lighting" \
+        --prompt "A portrait video of Vanraj a man with gentle wind moving his hair, warm lighting" \
         --video_size 768 512 \
         --video_length 161 \
         --fps 24 \
@@ -282,7 +282,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "CHARACTER_VANRAJ_V1 reading a book under a large oak tree, leaves falling gently" \
+        --prompt "Vanraj a man reading a book under a large oak tree, leaves falling gently" \
         --video_size 1024 576 \
         --infer_steps 50 \
         --guidance_scale 7.0 \
@@ -318,7 +318,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "CHARACTER_VANRAJ_V1 in royal attire giving a speech in front of a crowd, ultra detailed" \
+        --prompt "Vanraj a man in royal attire giving a speech in front of a crowd, ultra detailed" \
         --infer_steps 60 \
         --guidance_scale 7.0 \
         --guidance_scale_high_noise 6.0 \
@@ -346,7 +346,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "CHARACTER_VANRAJ_V1 dancing gracefully in traditional clothing, cinematic lighting" \
+        --prompt "Vanraj a man dancing gracefully in traditional clothing, cinematic lighting" \
         --video_size 1024 576 \
         --infer_steps 50 \
         --guidance_scale 7.0 \
@@ -381,7 +381,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "CHARACTER_VANRAJ_V1 performing a traditional ceremony, high resolution frames" \
+        --prompt "Vanraj a man performing a traditional ceremony, high resolution frames" \
         --output_type images \
         --video_size 1280 720 \
         --video_length 81 \
@@ -410,7 +410,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_weight_high_noise "$LATEST_HIGH" \
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
-        --prompt "CHARACTER_VANRAJ_V1 crafting something with his hands in a workshop, professional quality" \
+        --prompt "Vanraj a man crafting something with his hands in a workshop, professional quality" \
         --output_type both \
         --video_size 1024 576 \
         --video_length 81 \
