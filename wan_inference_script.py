@@ -1,4 +1,4 @@
-e#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 WAN 2.2 T2V Inference Script for Character LoRA
 This script generates videos using trained high noise and low noise LoRA weights.
@@ -25,9 +25,9 @@ def create_inference_command(
     # Generation parameters
     prompt: str = "A video of CHARACTER_VANRAJ_V1 walking in a garden",
     negative_prompt: str = None,
-    video_size: tuple = (512, 512),  # (height, width)
+    video_size: tuple = (768, 512),  # H100 optimized default (height, width)
     video_length: int = 81,  # frames
-    fps: int = 16,
+    fps: int = 24,  # H100 optimized default
     infer_steps: int = None,  # Will use task default if None
     seed: int = 42,
 
@@ -53,15 +53,19 @@ def create_inference_command(
     task: str = "t2v-14B",  # "t2v-14B", "t2v-1.3B", "i2v-14B", "t2i-14B"
     device: str = "cuda",
     vae_dtype: str = "bfloat16",
-    fp8: bool = False,
-    fp8_scaled: bool = False,
-    fp8_fast: bool = False,
-    fp8_t5: bool = False,
+
+    # H100 Optimizations (enabled by default)
+    fp8: bool = True,  # H100 optimized default
+    fp8_scaled: bool = True,  # H100 optimized default
+    fp8_fast: bool = True,  # H100 optimized default
+    fp8_t5: bool = True,  # H100 optimized default
+    attn_mode: str = "flash3",  # H100 optimized default
+    compile_model: bool = True,  # H100 optimized default
+
     blocks_to_swap: int = 0,
     offload_inactive_dit: bool = False,
     vae_cache_cpu: bool = False,
     cpu_noise: bool = False,
-    compile_model: bool = False,
 
     # Output parameters
     save_path: str = "./outputs",
@@ -70,7 +74,15 @@ def create_inference_command(
     no_metadata: bool = False,
 ):
     """
-    Create the inference command for WAN video generation.
+    Create the inference command for WAN video generation optimized for H100 SXM GPU.
+
+    H100 SXM Optimizations:
+    - FP8 Tensor Cores: 2x faster inference with fp8, fp8_scaled, fp8_fast
+    - Flash Attention 3: Memory efficient attention computation
+    - Torch.compile: Kernel fusion for better performance
+    - Higher default resolution: 768x512 instead of 512x512
+    - Higher default FPS: 24 instead of 16
+    - All optimizations enabled by default
 
     Args:
         dit_model_path: Path to the main DiT model (low noise)
@@ -83,9 +95,9 @@ def create_inference_command(
         lora_multiplier_high_noise: Multiplier for high noise LoRA
         prompt: Text prompt for generation (should include CHARACTER_VANRAJ_V1)
         negative_prompt: Negative prompt
-        video_size: (height, width) tuple
+        video_size: (height, width) tuple - H100 optimized default: 768x512
         video_length: Number of frames
-        fps: Frames per second
+        fps: Frames per second - H100 optimized default: 24
         infer_steps: Number of inference steps
         seed: Random seed
         guidance_scale: CFG scale for low noise
@@ -103,15 +115,16 @@ def create_inference_command(
         task: WAN task configuration
         device: Device to use
         vae_dtype: VAE data type
-        fp8: Use FP8 for DiT
-        fp8_scaled: Use scaled FP8
-        fp8_fast: Enable fast FP8
-        fp8_t5: Use FP8 for T5
+        fp8: Use FP8 for DiT (H100 optimized default: True)
+        fp8_scaled: Use scaled FP8 (H100 optimized default: True)
+        fp8_fast: Enable fast FP8 (H100 optimized default: True)
+        fp8_t5: Use FP8 for T5 (H100 optimized default: True)
+        attn_mode: Attention mode (H100 optimized default: flash3)
+        compile_model: Enable torch.compile (H100 optimized default: True)
         blocks_to_swap: Number of blocks to swap
         offload_inactive_dit: Offload inactive DiT to CPU
         vae_cache_cpu: Cache VAE features on CPU
         cpu_noise: Generate noise on CPU
-        compile_model: Enable torch.compile
         save_path: Output directory
         output_type: Type of output to save
         trim_tail_frames: Frames to trim from end
@@ -190,6 +203,7 @@ def create_inference_command(
     cmd.extend(["--device", device])
     cmd.extend(["--vae_dtype", vae_dtype])
 
+    # H100 Optimizations
     if fp8:
         cmd.append("--fp8")
     if fp8_scaled:
@@ -199,6 +213,13 @@ def create_inference_command(
     if fp8_t5:
         cmd.append("--fp8_t5")
 
+    # Attention mode for H100
+    if attn_mode != "torch":  # Only add if not default
+        cmd.extend(["--attn_mode", attn_mode])
+
+    if compile_model:
+        cmd.append("--compile")
+
     if blocks_to_swap > 0:
         cmd.extend(["--blocks_to_swap", str(blocks_to_swap)])
     if offload_inactive_dit:
@@ -207,8 +228,6 @@ def create_inference_command(
         cmd.append("--vae_cache_cpu")
     if cpu_noise:
         cmd.append("--cpu_noise")
-    if compile_model:
-        cmd.append("--compile")
 
     # Output parameters
     cmd.extend(["--output_type", output_type])
@@ -221,10 +240,10 @@ def create_inference_command(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="WAN 2.2 T2V Character LoRA Inference Script")
-
+    parser = argparse.ArgumentParser(description="WAN 2.2 T2V Character LoRA Inference Script - H100 SXM Optimized")
+    
     # Model paths
-    parser.add_argument("--dit_model", type=str, required=True,
+    parser.add_argument("--dit_model", type=str, required=True, 
                        help="Path to the main DiT model (low noise)")
     parser.add_argument("--dit_high_noise", type=str, default=None,
                        help="Path to high noise DiT model (optional)")
@@ -232,72 +251,54 @@ def main():
                        help="Path to VAE model")
     parser.add_argument("--t5", type=str, default=None,
                        help="Path to T5 text encoder")
-
+    
     # LoRA paths
     parser.add_argument("--lora_low_noise", type=str, required=True,
                        help="Path to low noise LoRA weights")
     parser.add_argument("--lora_high_noise", type=str, default=None,
                        help="Path to high noise LoRA weights")
     parser.add_argument("--lora_multiplier", type=float, default=1.0,
-    parser = argparse.ArgumentParser(description="WAN 2.2 T2V Character LoRA Inference Script - H100 SXM Optimized")
-
+                       help="Multiplier for low noise LoRA")
+    parser.add_argument("--lora_multiplier_high_noise", type=float, default=1.0,
                        help="Multiplier for high noise LoRA")
-    parser.add_argument("--dit_model", type=str, required=True,
-    # Generation parameters
-    parser.add_argument("--prompt", type=str,
-                       default="A video of CHARACTER_VANRAJ_V1 walking in a beautiful garden during sunset",
+    
+    # Generation parameters (H100 optimized defaults)
+    parser.add_argument("--prompt", type=str, 
+                       default="A video of Vanraj walking in a beautiful garden during sunset",
                        help="Text prompt for generation")
     parser.add_argument("--negative_prompt", type=str, default=None,
                        help="Negative prompt")
-    parser.add_argument("--video_size", type=int, nargs=2, default=[512, 512],
-
+    parser.add_argument("--video_size", type=int, nargs=2, default=[768, 512],
+                       help="Video size (height width) - H100 optimized default: 768x512")
     parser.add_argument("--video_length", type=int, default=81,
                        help="Number of frames")
-    parser.add_argument("--fps", type=int, default=16,
-                       help="Frames per second")
+    parser.add_argument("--fps", type=int, default=24,
+                       help="Frames per second - H100 optimized default: 24")
     parser.add_argument("--seed", type=int, default=42,
                        help="Random seed")
-
+    
     # Quality parameters
     parser.add_argument("--guidance_scale", type=float, default=None,
-
-    # Generation parameters (H100 optimized defaults)
-    parser.add_argument("--prompt", type=str,
+                       help="CFG scale for low noise")
+    parser.add_argument("--guidance_scale_high_noise", type=float, default=None,
+                       help="CFG scale for high noise")
     parser.add_argument("--infer_steps", type=int, default=None,
                        help="Number of inference steps")
-
+    
     # Output
     parser.add_argument("--save_path", type=str, default="./outputs",
-                       help="Video size (height width) - H100 optimized default: 768x512")
+                       help="Output directory")
     parser.add_argument("--output_type", type=str, default="video",
                        choices=["video", "images", "latent", "both", "latent_images"],
                        help="Output type")
-                       help="Frames per second - H100 optimized default: 24")
-    # Performance
+    
+    # Performance (H100 optimized defaults)
     parser.add_argument("--task", type=str, default="t2v-14B",
-
+                       choices=["t2v-14B", "t2v-1.3B", "i2v-14B", "t2i-14B"],
                        help="WAN task configuration")
     parser.add_argument("--device", type=str, default="cuda",
                        help="Device to use")
-    parser.add_argument("--fp8", action="store_true",
-                       help="Use FP8 for DiT")
-    parser.add_argument("--blocks_to_swap", type=int, default=0,
-                       help="Number of blocks to swap to CPU")
-
-                       help="Enable torch.compile")
-
-    # Advanced options
-    parser.add_argument("--dry_run", action="store_true",
-                       help="Print command without executing")
-    parser.add_argument("--execute", action="store_true",
-
-    # Performance (H100 optimized defaults)
-    args = parser.parse_args()
-
-    # Create output directory
-    os.makedirs(args.save_path, exist_ok=True)
-
-
+    
     # H100 Optimizations (enabled by default)
     parser.add_argument("--fp8", action="store_true", default=True,
                        help="Use FP8 for DiT (H100 optimized: enabled by default)")
@@ -312,27 +313,27 @@ def main():
                        help="Attention mode (H100 optimized default: flash3)")
     parser.add_argument("--compile", action="store_true", default=True,
                        help="Enable torch.compile for kernel fusion (H100 optimized: enabled by default)")
-
+    
     # Memory management
-        dit_model_path=args.dit_model,
+    parser.add_argument("--blocks_to_swap", type=int, default=0,
                        help="Number of blocks to swap to CPU (0 for H100 with 80GB VRAM)")
     parser.add_argument("--offload_inactive_dit", action="store_true",
                        help="Offload inactive DiT to CPU")
     parser.add_argument("--vae_cache_cpu", action="store_true",
                        help="Cache VAE features on CPU")
-
+    
     # Disable H100 optimizations (if needed)
     parser.add_argument("--disable_h100_optimizations", action="store_true",
                        help="Disable H100 optimizations and use conservative settings")
-
-        lora_high_noise_path=args.lora_high_noise,
-        lora_multiplier=args.lora_multiplier,
-        lora_multiplier_high_noise=args.lora_multiplier_high_noise,
-        prompt=args.prompt,
-        negative_prompt=args.negative_prompt,
-
-        video_length=args.video_length,
-
+    
+    # Advanced options
+    parser.add_argument("--dry_run", action="store_true",
+                       help="Print command without executing")
+    parser.add_argument("--execute", action="store_true",
+                       help="Execute the command directly")
+    
+    args = parser.parse_args()
+    
     # Apply H100 optimizations unless disabled
     if args.disable_h100_optimizations:
         args.fp8 = False
@@ -351,42 +352,61 @@ def main():
         print("- Torch.compile: kernel fusion enabled")
         print("- Higher resolution: 768x512 default")
         print("- Higher FPS: 24 default")
-
+    
+    # Create output directory
+    os.makedirs(args.save_path, exist_ok=True)
+    
+    # Generate the command with H100 optimizations
+    cmd = create_inference_command(
+        dit_model_path=args.dit_model,
+        dit_high_noise_path=args.dit_high_noise,
+        vae_path=args.vae,
+        t5_path=args.t5,
+        lora_low_noise_path=args.lora_low_noise,
+        lora_high_noise_path=args.lora_high_noise,
+        lora_multiplier=args.lora_multiplier,
+        lora_multiplier_high_noise=args.lora_multiplier_high_noise,
+        prompt=args.prompt,
+        negative_prompt=args.negative_prompt,
+        video_size=tuple(args.video_size),
+        video_length=args.video_length,
+        fps=args.fps,
         seed=args.seed,
         guidance_scale=args.guidance_scale,
-
-    # Generate the command with H100 optimizations
+        guidance_scale_high_noise=args.guidance_scale_high_noise,
+        infer_steps=args.infer_steps,
         task=args.task,
         device=args.device,
         fp8=args.fp8,
-        blocks_to_swap=args.blocks_to_swap,
-        compile_model=args.compile,
-        save_path=args.save_path,
-        output_type=args.output_type,
-    )
-
-    print("Generated inference command:")
-    print(cmd)
-    print()
-
-    if args.dry_run:
-        print("Dry run mode - command not executed")
-        return
-
-    if args.execute:
-        print("Executing command...")
-        os.system(cmd)
-    else:
         fp8_scaled=args.fp8_scaled,
         fp8_fast=args.fp8_fast,
         fp8_t5=args.fp8_t5,
-        attn_mode=args.attn_mode,
         compile_model=args.compile,
-        print("To execute this command, run with --execute flag or copy the command above")
+        blocks_to_swap=args.blocks_to_swap,
         offload_inactive_dit=args.offload_inactive_dit,
         vae_cache_cpu=args.vae_cache_cpu,
+        save_path=args.save_path,
+        output_type=args.output_type,
+    )
+    
+    print("\nGenerated H100-optimized inference command:")
+    print(cmd)
+    print()
+    
+    if args.dry_run:
+        print("Dry run mode - command not executed")
+        return
+    
+    if args.execute:
+        print("Executing H100-optimized command...")
+        os.system(cmd)
+    else:
+        print("To execute this command, run with --execute flag or copy the command above")
+        print("\nFor maximum H100 performance, ensure:")
+        print("1. CUDA 12.0+ with H100 drivers installed")
+        print("2. PyTorch with FP8 support compiled")
+        print("3. Flash Attention 3 installed")
+        print("4. Sufficient cooling for sustained H100 performance")
 
 if __name__ == "__main__":
     main()
-
-    print("\nGenerated H100-optimized inference command:")
