@@ -129,11 +129,11 @@ else
     H100_OPTS="$H100_OPTS_STABLE"
 fi
 
-# For maximum quality on H100 (leveraging 80GB VRAM) - FIXED FOR STABILITY
-HIGH_QUALITY_OPTS="--video_size 1024 576 --infer_steps 50 --guidance_scale 6.5 --guidance_scale_high_noise 5.5"
+# For maximum quality on H100 (leveraging 80GB VRAM) - HORIZONTAL FORMAT
+HIGH_QUALITY_OPTS="--video_size 576 1024 --infer_steps 50 --guidance_scale 6.5 --guidance_scale_high_noise 5.5"
 
-# For ultra-high resolution (H100 can handle this) - OPTIMIZED FOR STABLE GENERATION
-ULTRA_HD_OPTS="--video_size 1280 720 --infer_steps 60 --video_length 81 --guidance_scale 6.0 --guidance_scale_high_noise 5.0"
+# For ultra-high resolution (H100 can handle this) - HORIZONTAL FORMAT
+ULTRA_HD_OPTS="--video_size 720 1280 --infer_steps 60 --video_length 121 --guidance_scale 6.0 --guidance_scale_high_noise 5.0"
 
 # Stable LoRA multipliers for consistent character generation
 LORA_MULTIPLIER_LOW="0.75"      # Reduced for better character consistency
@@ -155,7 +155,7 @@ python wan_generate_video.py \
     --lora_weight "$LATEST_LOW" \
     --lora_multiplier "$LORA_MULTIPLIER_LOW" \
     --prompt "A video of Vanraj a man walking in a beautiful garden during sunset" \
-    --video_size 768 512 \
+    --video_size 512 768 \
     $H100_OPTS \
     --save_path "$INFERENCE_OUTPUT_DIR/h100_basic" \
     --seed 42
@@ -230,7 +230,7 @@ python wan_generate_video.py \
     --lora_multiplier "$LORA_MULTIPLIER_LOW" \
     --prompt "A dynamic video of Vanraj a man practicing martial arts in a serene mountain temple" \
     --negative_prompt "blurry, low quality, distorted face, extra limbs" \
-    --video_size 768 512 \
+    --video_size 512 768 \
     --fps 30 \
     --infer_steps 30 \
     --guidance_scale 6.5 \
@@ -254,7 +254,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "A portrait video of Vanraj a man with gentle wind moving his hair, warm lighting" \
-        --video_size 768 512 \
+        --video_size 512 768 \
         --video_length 161 \
         --fps 24 \
         --guidance_scale 6.5 \
@@ -283,7 +283,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "Vanraj a man reading a book under a large oak tree, leaves falling gently" \
-        --video_size 1024 576 \
+        --video_size 576 1024 \
         --infer_steps 50 \
         --guidance_scale 7.0 \
         --guidance_scale_high_noise 6.0 \
@@ -322,7 +322,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --infer_steps 60 \
         --guidance_scale 7.0 \
         --guidance_scale_high_noise 6.0 \
-        --video_size 1024 576 \
+        --video_size 576 1024 \
         --flow_shift 3.5 \
         $H100_OPTS \
         --save_path "$INFERENCE_OUTPUT_DIR/h100_ultra_detail" \
@@ -347,7 +347,7 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_multiplier "$LORA_MULTIPLIER_LOW" \
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "Vanraj a man dancing gracefully in traditional clothing, cinematic lighting" \
-        --video_size 1024 576 \
+        --video_size 576 1024 \
         --infer_steps 50 \
         --guidance_scale 7.0 \
         --guidance_scale_high_noise 6.0 \
@@ -383,8 +383,8 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "Vanraj a man performing a traditional ceremony, high resolution frames" \
         --output_type images \
-        --video_size 1280 720 \
-        --video_length 81 \
+        --video_size 720 1280 \
+        --video_length 121 \
         --infer_steps 50 \
         --guidance_scale 6.5 \
         --guidance_scale_high_noise 5.5 \
@@ -412,8 +412,8 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "Vanraj a man crafting something with his hands in a workshop, professional quality" \
         --output_type both \
-        --video_size 1024 576 \
-        --video_length 81 \
+        --video_size 576 1024 \
+        --video_length 121 \
         --infer_steps 50 \
         --guidance_scale 6.5 \
         --guidance_scale_high_noise 5.5 \
