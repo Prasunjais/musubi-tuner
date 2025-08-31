@@ -129,11 +129,15 @@ else
     H100_OPTS="$H100_OPTS_STABLE"
 fi
 
-# For maximum quality on H100 (leveraging 80GB VRAM)
-HIGH_QUALITY_OPTS="--video_size 1024 576 --infer_steps 50 --guidance_scale 7.5 --guidance_scale_high_noise 6.5"
+# For maximum quality on H100 (leveraging 80GB VRAM) - FIXED FOR STABILITY
+HIGH_QUALITY_OPTS="--video_size 1024 576 --infer_steps 50 --guidance_scale 6.5 --guidance_scale_high_noise 5.5"
 
-# For ultra-high resolution (H100 can handle this)
-ULTRA_HD_OPTS="--video_size 1280 720 --infer_steps 60 --video_length 81"
+# For ultra-high resolution (H100 can handle this) - OPTIMIZED FOR STABLE GENERATION
+ULTRA_HD_OPTS="--video_size 1280 720 --infer_steps 60 --video_length 81 --guidance_scale 6.0 --guidance_scale_high_noise 5.0"
+
+# Stable LoRA multipliers for consistent character generation
+LORA_MULTIPLIER_LOW="0.85"      # Slightly reduced for stability
+LORA_MULTIPLIER_HIGH="0.75"     # Lower for high noise to prevent artifacts
 
 # =============================================================================
 # H100 OPTIMIZED BASIC EXAMPLES
