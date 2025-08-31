@@ -136,8 +136,8 @@ HIGH_QUALITY_OPTS="--video_size 1024 576 --infer_steps 50 --guidance_scale 6.5 -
 ULTRA_HD_OPTS="--video_size 1280 720 --infer_steps 60 --video_length 81 --guidance_scale 6.0 --guidance_scale_high_noise 5.0"
 
 # Stable LoRA multipliers for consistent character generation
-LORA_MULTIPLIER_LOW="0.85"      # Slightly reduced for stability
-LORA_MULTIPLIER_HIGH="0.75"     # Lower for high noise to prevent artifacts
+LORA_MULTIPLIER_LOW="0.75"      # Reduced for better character consistency
+LORA_MULTIPLIER_HIGH="0.65"     # Lower for high noise to prevent artifacts
 
 # =============================================================================
 # H100 OPTIMIZED BASIC EXAMPLES
@@ -153,6 +153,7 @@ python wan_generate_video.py \
     --vae "$VAE_MODEL" \
     --t5 "$T5_MODEL" \
     --lora_weight "$LATEST_LOW" \
+    --lora_multiplier "$LORA_MULTIPLIER_LOW" \
     --prompt "A video of CHARACTER_VANRAJ_V1 walking in a beautiful garden during sunset" \
     --video_size 768 512 \
     $H100_OPTS \
@@ -172,6 +173,8 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "A cinematic video of CHARACTER_VANRAJ_V1 standing confidently in an ornate palace hall" \
         $HIGH_QUALITY_OPTS \
         $H100_OPTS \
@@ -195,11 +198,13 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "CHARACTER_VANRAJ_V1 in 4K cinematic quality performing an elaborate royal ceremony" \
         $ULTRA_HD_OPTS \
         $H100_OPTS \
-        --guidance_scale 8.0 \
-        --guidance_scale_high_noise 7.0 \
+        --guidance_scale 7.0 \
+        --guidance_scale_high_noise 6.0 \
         --save_path "$INFERENCE_OUTPUT_DIR/h100_4k" \
         --seed 456
 
@@ -222,20 +227,22 @@ python wan_generate_video.py \
     --vae "$VAE_MODEL" \
     --t5 "$T5_MODEL" \
     --lora_weight "$LATEST_LOW" \
+    --lora_multiplier "$LORA_MULTIPLIER_LOW" \
     --prompt "A dynamic video of CHARACTER_VANRAJ_V1 practicing martial arts in a serene mountain temple" \
     --negative_prompt "blurry, low quality, distorted face, extra limbs" \
     --video_size 768 512 \
     --fps 30 \
     --infer_steps 30 \
+    --guidance_scale 6.5 \
     $H100_OPTS \
     --seed 789 \
     --save_path "$INFERENCE_OUTPUT_DIR/h100_lightning"
 
 echo "✅ Example 4 completed"
 
-# Example 5: Long video generation (leveraging H100's 80GB VRAM)
+# Example 5: Long video generation (leveraging H100's 80GB VRAM) - STABILIZED
 if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
-    echo "🎬 Example 5: Long video generation"
+    echo "🎬 Example 5: Long video generation (STABILIZED)"
     python wan_generate_video.py \
         --task t2v-14B \
         --dit "$DIT_MODEL" \
@@ -244,23 +251,27 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "A portrait video of CHARACTER_VANRAJ_V1 with gentle wind moving his hair, warm lighting" \
         --video_size 768 512 \
         --video_length 161 \
         --fps 24 \
+        --guidance_scale 6.5 \
+        --guidance_scale_high_noise 5.5 \
+        --timestep_boundary 0.6 \
         $H100_OPTS \
-        --guidance_scale 7.5 \
         --seed 321 \
-        --save_path "$INFERENCE_OUTPUT_DIR/h100_long_video"
+        --save_path "$INFERENCE_OUTPUT_DIR/h100_long_video_stable"
 
-    echo "✅ Example 5 completed"
+    echo "✅ Example 5 completed with stability fixes"
 else
     echo "⚠️  Skipping Example 5: High noise LoRA not found"
 fi
 
-# Example 6: Maximum quality with Skip Layer Guidance (H100 can handle complexity)
+# Example 6: Maximum quality with Skip Layer Guidance (STABILIZED)
 if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
-    echo "🎬 Example 6: Maximum quality with Skip Layer Guidance"
+    echo "🎬 Example 6: Maximum quality with Skip Layer Guidance (STABILIZED)"
     python wan_generate_video.py \
         --task t2v-14B \
         --dit "$DIT_MODEL" \
@@ -269,18 +280,21 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "CHARACTER_VANRAJ_V1 reading a book under a large oak tree, leaves falling gently" \
         --video_size 1024 576 \
         --infer_steps 50 \
-        --guidance_scale 8.0 \
-        --guidance_scale_high_noise 7.0 \
-        --slg_layers "0,1,2,3" \
-        --slg_scale 3.5 \
+        --guidance_scale 7.0 \
+        --guidance_scale_high_noise 6.0 \
+        --slg_layers "0,1,2" \
+        --slg_scale 2.5 \
+        --timestep_boundary 0.65 \
         $H100_OPTS \
         --seed 654 \
-        --save_path "$INFERENCE_OUTPUT_DIR/h100_slg_max"
+        --save_path "$INFERENCE_OUTPUT_DIR/h100_slg_stable"
 
-    echo "✅ Example 6 completed"
+    echo "✅ Example 6 completed with SLG stability fixes"
 else
     echo "⚠️  Skipping Example 6: High noise LoRA not found"
 fi
@@ -302,12 +316,14 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "CHARACTER_VANRAJ_V1 in royal attire giving a speech in front of a crowd, ultra detailed" \
-        --infer_steps 80 \
-        --guidance_scale 8.5 \
-        --guidance_scale_high_noise 7.5 \
-        --video_size 1152 640 \
-        --flow_shift 4.0 \
+        --infer_steps 60 \
+        --guidance_scale 7.0 \
+        --guidance_scale_high_noise 6.0 \
+        --video_size 1024 576 \
+        --flow_shift 3.5 \
         $H100_OPTS \
         --save_path "$INFERENCE_OUTPUT_DIR/h100_ultra_detail" \
         --seed 987
@@ -328,11 +344,13 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "CHARACTER_VANRAJ_V1 dancing gracefully in traditional clothing, cinematic lighting" \
         --video_size 1024 576 \
-        --infer_steps 60 \
-        --guidance_scale 7.8 \
-        --guidance_scale_high_noise 6.8 \
+        --infer_steps 50 \
+        --guidance_scale 7.0 \
+        --guidance_scale_high_noise 6.0 \
         --cfg_skip_mode early_late \
         --cfg_apply_ratio 0.8 \
         $H100_OPTS \
@@ -361,11 +379,15 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "CHARACTER_VANRAJ_V1 performing a traditional ceremony, high resolution frames" \
         --output_type images \
         --video_size 1280 720 \
         --video_length 81 \
         --infer_steps 50 \
+        --guidance_scale 6.5 \
+        --guidance_scale_high_noise 5.5 \
         $H100_OPTS \
         --save_path "$INFERENCE_OUTPUT_DIR/h100_hires_frames" \
         --seed 222
@@ -386,11 +408,15 @@ if [ -n "$LATEST_HIGH" ] && [ -f "$LATEST_HIGH" ]; then
         --t5 "$T5_MODEL" \
         --lora_weight "$LATEST_LOW" \
         --lora_weight_high_noise "$LATEST_HIGH" \
+        --lora_multiplier "$LORA_MULTIPLIER_LOW" \
+        --lora_multiplier_high_noise "$LORA_MULTIPLIER_HIGH" \
         --prompt "CHARACTER_VANRAJ_V1 crafting something with his hands in a workshop, professional quality" \
         --output_type both \
         --video_size 1024 576 \
         --video_length 81 \
-        --infer_steps 60 \
+        --infer_steps 50 \
+        --guidance_scale 6.5 \
+        --guidance_scale_high_noise 5.5 \
         $H100_OPTS \
         --save_path "$INFERENCE_OUTPUT_DIR/h100_professional" \
         --seed 333
